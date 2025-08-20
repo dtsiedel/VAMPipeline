@@ -1,0 +1,21 @@
+conda update -n base -c default conda
+conda create -n vam_env
+conda activate vam_env
+conda install pytorch
+conda config --get channels
+conda config --prepend channels astra-toolbox
+conda config --prepend channels conda-forge
+conda config --prepend channels anaconda
+conda config --prepend channels nvidia
+conda config --prepend channels numba
+conda config --prepend channels pytorch
+conda install astra-toolbox colorama dill docutils ffmpeg-python vedo matplotlib ipython ipykernel numba opencv imageio pyvista pyglet scikit-image
+conda list
+git clone https://github.com/computed-axial-lithography/VAMToolbox.git
+cd VAMToolbox/
+conda install trimesh
+conda install tqdm
+conda install pyopengl
+pip install -e .
+# replace all deprecated "np.NaN" with "np.nan"
+python -c 'import vamtoolbox as vam'
