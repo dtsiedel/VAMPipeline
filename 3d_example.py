@@ -1,5 +1,9 @@
 import vamtoolbox as vam
 import numpy as np
+import pickle
+import vedo
+import vedo.applications
+
 
 target_geo = vam.geometry.TargetGeometry(stlfilename=vam.resources.load("trifurcatedvasculature.stl"),resolution=200)
 
@@ -12,19 +16,12 @@ opt_sino, opt_recon, error = vam.optimize.optimize(target_geo, proj_geo,optimize
 opt_recon.show()
 opt_sino.show()
 
-print('recon type', type(opt_recon))
-print('sino type', type(opt_sino))
-
-import pickle
-
 with open('recon.pickle', 'wb') as handle:
     pickle.dump(opt_recon, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 with open('sino.pickle', 'wb') as handle:
     pickle.dump(opt_sino, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-import vedo
-import vedo.applications
 #vol = vedo.Volume(opt_recon.array,mode=0)
 vol = vedo.Volume(opt_recon.array)
 vedo.applications.RayCastPlotter(vol,bg='black').show(viewup="x")
