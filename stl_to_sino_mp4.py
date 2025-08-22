@@ -1,3 +1,4 @@
+import argparse
 import cv2
 import numpy as np
 import pickle
@@ -37,15 +38,41 @@ def create_video_from_ndarrays(frames: list[np.ndarray], output_path, fps = 30):
 
 
 def main():
-    # TODO: argparse for input name, output name, opt iterations, fps of video
-    target_geo = vam.geometry.TargetGeometry(stlfilename=vam.resources.load("trifurcatedvasculature.stl"), resolution=200)
+    parser = argparse.ArgumentParser(description='Process STL file to MP4 sinogram.')
+    
+    # Required positional arguments
+    parser.add_argument('stl_input', 
+                        help='Input STL file path')
+    parser.add_argument('mp4_output',
+                        help='Output MP4 file path')
+    
+    # Optional arguments with defaults
+    parser.add_argument('--iterations',
+                        type=int,
+                        default=20,
+                        help='Number of iterations (default: 20)')
+    parser.add_argument('--fps',
+                        type=int,
+                        default=30,
+                        help='Frames per second (default: 30)')
+    parser.add_argument('--method',
+                        choices=['OSMO'],
+                        default='OSMO',
+                        help='Processing method (default: OSMO)')
+    args = parser.parse_args()
+
+    # TODO: plug in stl_input arg
+    target_geo = vam.geometry.TargetGeometry(stlfilename=vam.resources.load("trifurcatedvasculature.stl"),
+                                             resolution=200)
 
     num_angles = 360
     angles = np.linspace(0, 360 - 360 / num_angles, num_angles)
-    proj_geo = vam.geometry.ProjectionGeometry(angles,ray_type='parallel',CUDA=False)
+    proj_geo = vam.geometry.ProjectionGeometry(angles, ray_type='parallel', CUDA=False)
 
-    optimizer_params = vam.optimize.Options(method='OSMO', n_iter=20, d_h=0.85, d_l=0.6, filter='hamming', verbose='plot')
-    opt_sino, opt_recon, error = vam.optimize.optimize(target_geo, proj_geo,optimizer_params)
+    optimizer_params = vam.optimize.Options(method=args.method, n_iter=args.iterations, d_h=0.85,
+                                            d_l=0.6, filter='hamming', verbose='plot')
+    opt_sino, opt_recon, error = vam.optimize.optimize(target_geo, proj_geo,
+                                                       optimizer_params)
     opt_recon.show()
     opt_sino.show()
 
@@ -57,7 +84,7 @@ def main():
 
     images = [opt_sino.array[:, n, :].T for n in range(opt_sino.array.shape[1])]
 
-    create_video_from_ndarrays(images, 'output.mp4')
+    create_video_from_ndarrays(images, args.mp4_output, fps=args.fps)
 
 
 if __name__ == '__main__':

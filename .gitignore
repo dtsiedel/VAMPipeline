@@ -1,3 +1,4 @@
 VAMtoolbox/
 *.pickle
 *.mp4
+.DS_Store
