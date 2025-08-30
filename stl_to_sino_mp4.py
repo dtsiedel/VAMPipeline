@@ -51,6 +51,10 @@ def main():
                         type=int,
                         default=20,
                         help='Number of iterations (default: 20)')
+    parser.add_argument('--resolution',
+                        type=int,
+                        default=200,
+                        help='Resolution (default: 200)')
     parser.add_argument('--fps',
                         type=int,
                         default=30,
@@ -61,9 +65,9 @@ def main():
                         help='Processing method (default: OSMO)')
     args = parser.parse_args()
 
-    # TODO: plug in stl_input arg
-    target_geo = vam.geometry.TargetGeometry(stlfilename=vam.resources.load("trifurcatedvasculature.stl"),
-                                             resolution=200)
+    target_geo = vam.geometry.TargetGeometry(stlfilename=args.stl_input,
+                                             resolution=args.resolution)
+    target_geo.show()
 
     num_angles = 360
     angles = np.linspace(0, 360 - 360 / num_angles, num_angles)
