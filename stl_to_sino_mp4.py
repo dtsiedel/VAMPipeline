@@ -37,6 +37,35 @@ def create_video_from_ndarrays(frames: list[np.ndarray], output_path, fps = 30):
     out.release()
 
 
+def do_conversion(stl_input: str, mp4_output: str,
+                  iters: int, resolution: int, fps: int,
+                  method: str):
+    target_geo = vam.geometry.TargetGeometry(stlfilename=stl_input,
+                                             resolution=resolution)
+    target_geo.show()
+
+    num_angles = 360
+    angles = np.linspace(0, 360 - 360 / num_angles, num_angles)
+    proj_geo = vam.geometry.ProjectionGeometry(angles, ray_type='parallel', CUDA=False)
+
+    optimizer_params = vam.optimize.Options(method=method, n_iter=iters, d_h=0.85,
+                                            d_l=0.6, filter='hamming', verbose='plot')
+    opt_sino, opt_recon, error = vam.optimize.optimize(target_geo, proj_geo,
+                                                       optimizer_params)
+    opt_recon.show()
+    opt_sino.show()
+
+    with open('sino.pickle', 'wb') as handle:
+        pickle.dump(opt_sino, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    vol = vedo.Volume(opt_recon.array)
+    vedo.applications.RayCastPlotter(vol,bg='black').show(viewup="x")
+
+    images = [opt_sino.array[:, n, :].T for n in range(opt_sino.array.shape[1])]
+
+    create_video_from_ndarrays(images, mp4_output, fps=fps)
+
+
 def main():
     parser = argparse.ArgumentParser(description='Process STL file to MP4 sinogram.')
     
@@ -65,30 +94,8 @@ def main():
                         help='Processing method (default: OSMO)')
     args = parser.parse_args()
 
-    target_geo = vam.geometry.TargetGeometry(stlfilename=args.stl_input,
-                                             resolution=args.resolution)
-    target_geo.show()
-
-    num_angles = 360
-    angles = np.linspace(0, 360 - 360 / num_angles, num_angles)
-    proj_geo = vam.geometry.ProjectionGeometry(angles, ray_type='parallel', CUDA=False)
-
-    optimizer_params = vam.optimize.Options(method=args.method, n_iter=args.iterations, d_h=0.85,
-                                            d_l=0.6, filter='hamming', verbose='plot')
-    opt_sino, opt_recon, error = vam.optimize.optimize(target_geo, proj_geo,
-                                                       optimizer_params)
-    opt_recon.show()
-    opt_sino.show()
-
-    with open('sino.pickle', 'wb') as handle:
-        pickle.dump(opt_sino, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-    vol = vedo.Volume(opt_recon.array)
-    vedo.applications.RayCastPlotter(vol,bg='black').show(viewup="x")
-
-    images = [opt_sino.array[:, n, :].T for n in range(opt_sino.array.shape[1])]
-
-    create_video_from_ndarrays(images, args.mp4_output, fps=args.fps)
+    return do_conversion(args.stl_input, args.mp4_output, args.iterations,
+                         args.resolution, args.fps, args.method)
 
 
 if __name__ == '__main__':
