@@ -39,10 +39,11 @@ def create_video_from_ndarrays(frames: list[np.ndarray], output_path, fps = 30):
 
 def do_conversion(stl_input: str, mp4_output: str,
                   iters: int, resolution: int, fps: int,
-                  method: str):
+                  method: str, show_figs: bool):
     target_geo = vam.geometry.TargetGeometry(stlfilename=stl_input,
                                              resolution=resolution)
-    target_geo.show()
+    if show_figs:
+        target_geo.show()
 
     num_angles = 360
     angles = np.linspace(0, 360 - 360 / num_angles, num_angles)
@@ -52,14 +53,16 @@ def do_conversion(stl_input: str, mp4_output: str,
                                             d_l=0.6, filter='hamming', verbose='plot')
     opt_sino, opt_recon, error = vam.optimize.optimize(target_geo, proj_geo,
                                                        optimizer_params)
-    opt_recon.show()
-    opt_sino.show()
+    if show_figs:
+        opt_recon.show()
+        opt_sino.show()
 
     with open('sino.pickle', 'wb') as handle:
         pickle.dump(opt_sino, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     vol = vedo.Volume(opt_recon.array)
-    vedo.applications.RayCastPlotter(vol,bg='black').show(viewup="x")
+    if show_figs:
+        vedo.applications.RayCastPlotter(vol,bg='black').show(viewup="x")
 
     images = [opt_sino.array[:, n, :].T for n in range(opt_sino.array.shape[1])]
 
@@ -92,10 +95,12 @@ def main():
                         choices=['OSMO'],
                         default='OSMO',
                         help='Processing method (default: OSMO)')
+    parser.add_argument('--no-show',
+                        action='store_true')
     args = parser.parse_args()
 
     return do_conversion(args.stl_input, args.mp4_output, args.iterations,
-                         args.resolution, args.fps, args.method)
+                         args.resolution, args.fps, args.method, not args.no_show)
 
 
 if __name__ == '__main__':

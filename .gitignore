@@ -3,3 +3,4 @@ VAMtoolbox/
 *.mp4
 .DS_Store
 outputs/*.txt
+outputs/*.mp4
