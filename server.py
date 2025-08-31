@@ -1,10 +1,15 @@
-import multiprocessing
-from typing import Dict, Any
+import copy
 import logging
+import multiprocessing
+from pathlib import Path
 import queue
 import sys
 import time
+from typing import Dict, Any
 import uuid
+
+from stl_to_sino_mp4 import do_conversion
+
 
 SHUTDOWN_KEY = 'shutdown'
 
@@ -26,14 +31,7 @@ def worker_process(q: multiprocessing.Queue):
     
     def process_dictionary(data: Dict[str, Any]):
         """Process a single dictionary"""
-        # TODO: run long-running stuff here instead.
-        # TODO: Import main func and run it with args from dict
-        logging.info(f"Working on dict {data}")
-        result = {k.upper(): str(v) for k, v in data.items()}
-        output_f = f'outputs/{uuid.uuid4()}.txt'
-        with open(output_f, 'w') as out:
-            out.write(str(result))
-        logging.info(f"Processed result: {result}")
+        do_conversion(**data)
         
     try:
         while True:
@@ -76,17 +74,29 @@ def main():
     bg_process.start()
     
     try:
-        example_data = [
-            {"key": "value", "number": 42},
-            {"message": "hello", "count": 1}
-        ]
+        data = {
+            'stl_input': str(Path.home() / 'Files/3DPrint/Low-Poly_Bulbasaur/files/bulbasaur_centered.stl'),
+            'mp4_output': str(Path('.') / 'outputs' / 'output_scratch_bulba.mp4'),
+            'iters': 3,
+            'resolution': 50,
+            'fps': 30,
+            'method': 'OSMO',
+            'show_figs': False,
+        }
         
-        for data in example_data:
-            logging.info(f"Sending data: {data}")
-            q.put(data)
-            time.sleep(1)  # Simulate main process doing something else
-            
-        time.sleep(2)
+        data2 = copy.deepcopy(data)
+        data2['stl_input'] = str(Path.home() / 'Files/3DPrint/witcher_cat_medallion/tw3_medallion_cat_school_rot.stl')
+        data2['mp4_output'] = str(Path('.') / 'outputs' / 'output_scratch_witcher.mp4')
+        
+        logging.info(f"Sending data: {data}")
+        q.put(data)
+        logging.info(f"Sending data: {data2}")
+        q.put(data2)
+
+        # Wait for Ctrl+C
+        # TODO: This will be the webserver main later
+        while True:
+            time.sleep(1)
         
     finally:
         logging.info("Initiating shutdown...")

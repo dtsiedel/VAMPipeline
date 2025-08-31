@@ -49,8 +49,9 @@ def do_conversion(stl_input: str, mp4_output: str,
     angles = np.linspace(0, 360 - 360 / num_angles, num_angles)
     proj_geo = vam.geometry.ProjectionGeometry(angles, ray_type='parallel', CUDA=False)
 
+    verbose_opt = 'plot' if show_figs else False
     optimizer_params = vam.optimize.Options(method=method, n_iter=iters, d_h=0.85,
-                                            d_l=0.6, filter='hamming', verbose='plot')
+                                            d_l=0.6, filter='hamming', verbose=verbose_opt)
     opt_sino, opt_recon, error = vam.optimize.optimize(target_geo, proj_geo,
                                                        optimizer_params)
     if show_figs:
