@@ -5,6 +5,8 @@ from pathlib import Path
 import queue
 import sys
 import time
+import tornado.ioloop
+import tornado.web
 from typing import Dict, Any
 import uuid
 
@@ -27,7 +29,7 @@ def worker_process(q: multiprocessing.Queue):
     Args:
         q: Shared multiprocessing Queue for receiving dictionaries
     """
-    logging.info("Background worker started")
+    logging.info('Background worker started')
     
     def process_dictionary(data: Dict[str, Any]):
         """Process a single dictionary"""
@@ -40,7 +42,7 @@ def worker_process(q: multiprocessing.Queue):
                 
                 # Check for shutdown signal, bail if received
                 if check_shutdown(item):
-                    logging.info("Received shutdown signal")
+                    logging.info('Received shutdown signal')
                     break
                     
                 # Else we should process it
@@ -48,14 +50,33 @@ def worker_process(q: multiprocessing.Queue):
                 
             except queue.Empty:
                 if not multiprocessing.parent_process().is_alive():
-                    logging.info("Parent process terminated")
+                    logging.info('Parent process terminated')
                     break
                     
     except Exception as e:
-        logging.error(f"Worker error: {str(e)}", exc_info=True)
+        logging.error(f'Worker error: {str(e)}', exc_info=True)
     finally:
-        logging.info("Worker shutting down")
+        logging.info('Worker shutting down')
         sys.exit(0)
+
+
+class SubmitHandler(tornado.web.RequestHandler):
+    def post(self):
+        # Get the parameters from the POST request
+        data_dict = {
+            'stl_input': self.get_argument('stl_input'),
+            'mp4_output': self.get_argument('mp4_output'),
+            'iters': int(self.get_argument('iterations')),
+            'resolution': int(self.get_argument('resolution')),
+            'fps': int(self.get_argument('fps')),
+            'method': self.get_argument('method'),
+            'show_figs': False
+        }
+        
+        # Enqueue that data for the worker to receive
+        submit_queue = self.application.settings['submit_queue']
+        logging.info(f'Enqueueing request: {data_dict}')
+        submit_queue.put(data_dict)
 
 
 def main():
@@ -72,48 +93,35 @@ def main():
         daemon=True
     )
     bg_process.start()
+    logging.info('Started worker process.')
     
     try:
-        data = {
-            'stl_input': str(Path.home() / 'Files/3DPrint/Low-Poly_Bulbasaur/files/bulbasaur_centered.stl'),
-            'mp4_output': str(Path('.') / 'outputs' / 'output_scratch_bulba.mp4'),
-            'iters': 3,
-            'resolution': 50,
-            'fps': 30,
-            'method': 'OSMO',
-            'show_figs': False,
-        }
-        
-        data2 = copy.deepcopy(data)
-        data2['stl_input'] = str(Path.home() / 'Files/3DPrint/witcher_cat_medallion/tw3_medallion_cat_school_rot.stl')
-        data2['mp4_output'] = str(Path('.') / 'outputs' / 'output_scratch_witcher.mp4')
-        
-        logging.info(f"Sending data: {data}")
-        q.put(data)
-        logging.info(f"Sending data: {data2}")
-        q.put(data2)
+        # Start web server on localhost:8888
+        output_dir = Path('.') / 'outputs'
+        app = tornado.web.Application([
+            (r'/submit', SubmitHandler),
+            (r'/outputs/(.*)', tornado.web.StaticFileHandler, {'path': output_dir})
+        ], submit_queue=q)
+        app.listen(8888)
+        logging.info('Starting server process on port 8888.')
+        tornado.ioloop.IOLoop.current().start()
 
-        # Wait for Ctrl+C
-        # TODO: This will be the webserver main later
-        while True:
-            time.sleep(1)
-        
     finally:
-        logging.info("Initiating shutdown...")
+        logging.info('Initiating shutdown...')
         q.put({'shutdown': True})
         bg_process.join(timeout=5)
         
         if bg_process.is_alive():
-            logging.warning("Graceful shutdown failed, forcing termination...")
+            logging.warning('Graceful shutdown failed, forcing termination...')
             bg_process.terminate()
             bg_process.join(timeout=1)  # Wait for termination to complete
             
             if bg_process.is_alive():
-                logging.error("Failed to terminate process!")
+                logging.error('Failed to terminate process!')
             else:
-                logging.info("Process successfully terminated")
+                logging.info('Process successfully terminated')
             
-    logging.info("Main process completed")
+    logging.info('Main process completed')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
