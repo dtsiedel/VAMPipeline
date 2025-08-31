@@ -1,6 +1,7 @@
 import copy
 import logging
 import multiprocessing
+import os
 from pathlib import Path
 import queue
 import sys
@@ -60,6 +61,18 @@ def worker_process(q: multiprocessing.Queue):
         sys.exit(0)
 
 
+class DownloadStaticFileHandler(tornado.web.StaticFileHandler):
+    def set_extra_headers(self, path):
+        # Force download for all files
+        self.set_header('Content-Type', 'application/octet-stream')
+        self.set_header('Content-Disposition',
+                        'attachment; filename="{}"'.format(os.path.basename(path)))
+        # Disable caching to ensure fresh downloads
+        self.set_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        self.set_header('Pragma', 'no-cache')
+        self.set_header('Expires', '0')
+
+
 class SubmitHandler(tornado.web.RequestHandler):
     def post(self):
         # Get the parameters from the POST request
@@ -100,7 +113,7 @@ def main():
         output_dir = Path('.') / 'outputs'
         app = tornado.web.Application([
             (r'/submit', SubmitHandler),
-            (r'/outputs/(.*)', tornado.web.StaticFileHandler, {'path': output_dir})
+            (r'/outputs/(.*)', DownloadStaticFileHandler, {"path": output_dir})
         ], submit_queue=q)
         app.listen(8888)
         logging.info('Starting server process on port 8888.')
