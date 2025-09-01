@@ -1,0 +1,22 @@
+<html>
+<body>
+<p>Choose Parameters</p>
+<form action="/submit" method="POST" enctype="application/x-www-form-urlencoded">
+    <label for="stl_input">Input File:</label><br>
+    <input type="text" id="stl_input" name="stl_input"><br>
+    <label for="mp4_output">Output File:</label><br>
+    <input type="text" id="mp4_output" name="mp4_output"><br>
+    <label for="method">Method:</label><br>
+    <select id="method" name="method"><br>
+        <option value="OSMO">OSMO</option>
+    </select><br>
+    <label for="fps">FPS:</label><br>
+    <input type="text" id="fps" name="fps"><br>
+    <label for="resolution">Resolution:</label><br>
+    <input type="text" id="resolution" name="resolution"><br>
+    <label for="iterations">Iterations:</label><br>
+    <input type="text" id="iterations" name="iterations"><br>
+    <input type="submit" value="Submit">
+</form>
+</body>
+</html>

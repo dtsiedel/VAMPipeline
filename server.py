@@ -110,10 +110,12 @@ def main():
     
     try:
         # Start web server on localhost:8888
-        output_dir = Path('.') / 'outputs'
+        root = Path(os.path.dirname(__file__))
+        output_dir = root / 'outputs'
         app = tornado.web.Application([
             (r'/submit', SubmitHandler),
-            (r'/outputs/(.*)', DownloadStaticFileHandler, {"path": output_dir})
+            (r'/outputs/(.*)', DownloadStaticFileHandler, {"path": output_dir}),
+            (r'/(.*)', tornado.web.StaticFileHandler, {'path': root, 'default_filename': 'index.html'}),
         ], submit_queue=q)
         app.listen(8888)
         logging.info('Starting server process on port 8888.')
