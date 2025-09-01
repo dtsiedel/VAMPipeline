@@ -115,6 +115,7 @@ def main():
         app = tornado.web.Application([
             (r'/submit', SubmitHandler),
             (r'/outputs/(.*)', DownloadStaticFileHandler, {"path": output_dir}),
+            (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': root / 'static'}),
             (r'/(.*)', tornado.web.StaticFileHandler, {'path': root, 'default_filename': 'index.html'}),
         ], submit_queue=q)
         app.listen(8888)
