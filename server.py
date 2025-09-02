@@ -1,4 +1,6 @@
 import copy
+import glob
+import json
 import logging
 import multiprocessing
 import os
@@ -14,12 +16,14 @@ import uuid
 from stl_to_sino_mp4 import do_conversion
 
 
-SHUTDOWN_KEY = 'shutdown'
+QUEUE_SHUTDOWN_KEY = 'shutdown'
+SERVER_ROOT = Path(os.path.dirname(__file__))
+OUTPUT_DIR = SERVER_ROOT / 'outputs'
 
 
 def check_shutdown(d: Dict) -> bool:
-    if SHUTDOWN_KEY in d:
-        return d[SHUTDOWN_KEY]
+    if QUEUE_SHUTDOWN_KEY in d:
+        return d[QUEUE_SHUTDOWN_KEY]
     return False
 
 
@@ -92,6 +96,16 @@ class SubmitHandler(tornado.web.RequestHandler):
         submit_queue.put(data_dict)
 
 
+class ResultsHandler(tornado.web.RequestHandler):
+    def set_default_headers(self):
+        self.set_header("Content-Type", 'application/json')
+
+    def get(self):
+        files = [f'/{name}' for name in OUTPUT_DIR.iterdir() if
+                 name.suffix == '.mp4']
+        self.write(json.dumps({'files': files}))
+
+
 def main():
     logging.basicConfig(
         level=logging.INFO,
@@ -110,13 +124,15 @@ def main():
     
     try:
         # Start web server on localhost:8888
-        root = Path(os.path.dirname(__file__))
-        output_dir = root / 'outputs'
         app = tornado.web.Application([
             (r'/submit', SubmitHandler),
-            (r'/outputs/(.*)', DownloadStaticFileHandler, {"path": output_dir}),
-            (r'/static/(.*)', tornado.web.StaticFileHandler, {'path': root / 'static'}),
-            (r'/(.*)', tornado.web.StaticFileHandler, {'path': root, 'default_filename': 'index.html'}),
+            (r'/results', ResultsHandler),
+            (r'/outputs/(.*)', DownloadStaticFileHandler,
+                               {"path": OUTPUT_DIR}),
+            (r'/static/(.*)', tornado.web.StaticFileHandler,
+                              {'path': SERVER_ROOT / 'static'}),
+            (r'/(.*)', tornado.web.StaticFileHandler,
+                       {'path': SERVER_ROOT, 'default_filename': 'index.html'}),
         ], submit_queue=q)
         app.listen(8888)
         logging.info('Starting server process on port 8888.')
