@@ -6,6 +6,7 @@ import multiprocessing
 import os
 from pathlib import Path
 import queue
+import requests
 import sys
 import time
 import tornado.ioloop
@@ -16,6 +17,8 @@ import uuid
 from stl_to_sino_mp4 import do_conversion
 
 
+HOST = 'http://localhost'
+PORT = 8888
 QUEUE_SHUTDOWN_KEY = 'shutdown'
 SERVER_ROOT = Path(os.path.dirname(__file__))
 OUTPUT_DIR = SERVER_ROOT / 'outputs'
@@ -39,10 +42,19 @@ def worker_process(q: multiprocessing.Queue):
     """
     logging.info('Background worker started')
     
+    def mark_started(data: Dict[str, Any]):
+        id_dict = {'id': data['mp4_output']}
+        requests.post(f'{HOST}:{PORT}/started', params=id_dict)
+
+    def mark_completed(data: Dict[str, Any]):
+        id_dict = {'id': data['mp4_output']}
+        requests.post(f'{HOST}:{PORT}/completed', params=id_dict)
+
     def process_dictionary(data: Dict[str, Any]):
-        """Process a single dictionary"""
+        mark_started(data)
         do_conversion(**data)
-        
+        mark_completed(data)
+
     try:
         while True:
             try:
@@ -116,9 +128,9 @@ class StartedHandler(tornado.web.RequestHandler):
         try:
             queued.remove(started)
             running.append(started)
-            logging.info(f'Moved {started} from queued to running.')
+            logging.info(f'Worker started job {started}.')
         except ValueError:
-            logging.error(f'Worker started unknown name {started}!')
+            logging.error(f'Worker started unknown job {started}!')
 
 
 class CompletedHandler(tornado.web.RequestHandler):
@@ -126,9 +138,9 @@ class CompletedHandler(tornado.web.RequestHandler):
         completed = self.get_argument('id')
         if completed in running:
             running.remove(completed)
-            logging.info(f'Worker completed {completed}')
+            logging.info(f'Worker completed job {completed}')
         else:
-            logging.error(f'Worker completed unknown name {completed}!')
+            logging.error(f'Worker completed unknown job {completed}!')
 
 
 def main():
@@ -148,7 +160,7 @@ def main():
     logging.info('Started worker process.')
     
     try:
-        # Start web server on localhost:8888
+        # Start web server on localhost
         app = tornado.web.Application([
             (r'/submit', SubmitHandler),
             (r'/results', ResultsHandler),
@@ -161,8 +173,8 @@ def main():
             (r'/(.*)', tornado.web.StaticFileHandler,
                        {'path': SERVER_ROOT, 'default_filename': 'index.html'}),
         ], submit_queue=q)
-        app.listen(8888)
-        logging.info('Starting server process on port 8888.')
+        app.listen(PORT)
+        logging.info(f'Starting server process on port {PORT}.')
         tornado.ioloop.IOLoop.current().start()
 
     finally:
@@ -182,6 +194,7 @@ def main():
         q.close()
             
     logging.info('Main process completed')
+
 
 if __name__ == '__main__':
     main()
