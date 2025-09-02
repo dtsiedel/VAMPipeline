@@ -1,5 +1,3 @@
-console.log('Loaded js!')
-
 let register_click = () => {
     $('#submit-button').on('click', () => {
         $.post('/submit',
@@ -16,7 +14,6 @@ let register_click = () => {
         );
     });
 }
-
 
 let poll_outputs = () => {
     $.get('/results', (result) => {
@@ -41,3 +38,6 @@ $('document').ready(() => {
     poll_outputs();
     register_outputs_poll();
 });
+
+console.log('Loaded js!')
+

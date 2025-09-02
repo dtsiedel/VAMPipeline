@@ -20,6 +20,9 @@ QUEUE_SHUTDOWN_KEY = 'shutdown'
 SERVER_ROOT = Path(os.path.dirname(__file__))
 OUTPUT_DIR = SERVER_ROOT / 'outputs'
 
+queued = list()
+running = list()
+
 
 def check_shutdown(d: Dict) -> bool:
     if QUEUE_SHUTDOWN_KEY in d:
@@ -94,6 +97,7 @@ class SubmitHandler(tornado.web.RequestHandler):
         submit_queue = self.application.settings['submit_queue']
         logging.info(f'Enqueueing request: {data_dict}')
         submit_queue.put(data_dict)
+        queued.append(data_dict['mp4_output'])
 
 
 class ResultsHandler(tornado.web.RequestHandler):
@@ -104,6 +108,27 @@ class ResultsHandler(tornado.web.RequestHandler):
         files = [f'/{name}' for name in OUTPUT_DIR.iterdir() if
                  name.suffix == '.mp4']
         self.write(json.dumps({'files': files}))
+
+
+class StartedHandler(tornado.web.RequestHandler):
+    def post(self):
+        started = self.get_argument('id')
+        try:
+            queued.remove(started)
+            running.append(started)
+            logging.info(f'Moved {started} from queued to running.')
+        except ValueError:
+            logging.error(f'Worker started unknown name {started}!')
+
+
+class CompletedHandler(tornado.web.RequestHandler):
+    def post(self):
+        completed = self.get_argument('id')
+        if completed in running:
+            running.remove(completed)
+            logging.info(f'Worker completed {completed}')
+        else:
+            logging.error(f'Worker completed unknown name {completed}!')
 
 
 def main():
@@ -127,6 +152,8 @@ def main():
         app = tornado.web.Application([
             (r'/submit', SubmitHandler),
             (r'/results', ResultsHandler),
+            (r'/started', StartedHandler),
+            (r'/completed', CompletedHandler),
             (r'/outputs/(.*)', DownloadStaticFileHandler,
                                {"path": OUTPUT_DIR}),
             (r'/static/(.*)', tornado.web.StaticFileHandler,
@@ -152,6 +179,7 @@ def main():
                 logging.error('Failed to terminate process!')
             else:
                 logging.info('Process successfully terminated')
+        q.close()
             
     logging.info('Main process completed')
 
