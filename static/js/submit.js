@@ -2,18 +2,35 @@ let poll_interval = 2;
 
 let register_click = () => {
     $('#submit-button').on('click', () => {
-        $.post('/submit',
-            {stl_input: $('#stl_input').val(),
-             mp4_output: $('#mp4_output').val(),
-             method: $('#method').val(),
-             fps: $('#fps').val(),
-             resolution: $('#resolution').val(),
-             iterations: $('#iterations').val(),
+        $.ajax({
+            url: '/upload',
+            type: 'POST',
+
+            data: new FormData($('form')[0]),
+
+            // Tell jQuery not to process data or worry about content-type
+            cache: false,
+            contentType: false,
+            processData: false,
+            // On successful upload, submit other form fields
+            success: (result) => {
+                let id = result.id;
+                console.log(`Submit succeeded with ${id}`)
+
+                $.post('/submit',
+                    {uuid: id,
+                     method: $('#method').val(),
+                     fps: $('#fps').val(),
+                     resolution: $('#resolution').val(),
+                     iterations: $('#iterations').val(),
+                    }
+                );
             },
-            (data) => {
-                console.log(data);
+            fail: (result) => {
+                let id = result.id;
+                console.log(`Submit failed with ${id}`)
             }
-        );
+        });
     });
 }
 
@@ -24,7 +41,7 @@ let poll_outputs = () => {
         result.files.forEach((item, index) => {
             let leaf = item.split('/').at(-1);
             let link = `<a href="/outputs/${leaf}">Download</a>`;
-            let content = `<div class="output-item">${leaf}. ${link}</div>`;
+            let content = `<div class="output-item">${leaf} ${link}</div>`;
             $('#outputs').append(content);
         });
     });

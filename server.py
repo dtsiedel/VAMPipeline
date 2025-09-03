@@ -21,6 +21,7 @@ HOST = 'http://localhost'
 PORT = 8888
 QUEUE_SHUTDOWN_KEY = 'shutdown'
 SERVER_ROOT = Path(os.path.dirname(__file__))
+INPUT_DIR = SERVER_ROOT / 'inputs'
 OUTPUT_DIR = SERVER_ROOT / 'outputs'
 
 queued = list()
@@ -42,23 +43,23 @@ def worker_process(q: multiprocessing.Queue):
     """
     logging.info('Background worker started')
     
-    def mark_started(data: Dict[str, Any]):
-        id_dict = {'id': data['mp4_output']}
+    def mark_started(data: Dict[str, Any], the_id: str):
+        id_dict = {'id': the_id}
         requests.post(f'{HOST}:{PORT}/started', params=id_dict)
 
-    def mark_completed(data: Dict[str, Any]):
-        id_dict = {'id': data['mp4_output']}
+    def mark_completed(data: Dict[str, Any], the_id: str):
+        id_dict = {'id': the_id}
         requests.post(f'{HOST}:{PORT}/completed', params=id_dict)
 
-    def process_dictionary(data: Dict[str, Any]):
-        mark_started(data)
+    def process_dictionary(data: Dict[str, Any], the_id: str):
+        mark_started(data, the_id)
         do_conversion(**data)
-        mark_completed(data)
+        mark_completed(data, the_id)
 
     try:
         while True:
             try:
-                item = q.get(timeout=1)
+                item, the_id = q.get(timeout=1)
                 
                 # Check for shutdown signal, bail if received
                 if check_shutdown(item):
@@ -66,7 +67,7 @@ def worker_process(q: multiprocessing.Queue):
                     break
                     
                 # Else we should process it
-                process_dictionary(item)
+                process_dictionary(item, the_id)
                 
             except queue.Empty:
                 if not multiprocessing.parent_process().is_alive():
@@ -92,24 +93,38 @@ class DownloadStaticFileHandler(tornado.web.StaticFileHandler):
         self.set_header('Expires', '0')
 
 
+class UploadHandler(tornado.web.RequestHandler):
+    def post(self):
+        file_dict = self.request.files['file'][0]
+        print(f'Received file {file_dict["filename"]}')
+
+        the_id = uuid.uuid4()
+        output_path = INPUT_DIR / f'{the_id}.stl'
+        print(f'Saving it to {output_path}')
+        with open(output_path, 'wb') as out:
+            out.write(file_dict['body'])
+        self.write({'id': str(the_id)})
+
+
 class SubmitHandler(tornado.web.RequestHandler):
     def post(self):
         # Get the parameters from the POST request
         data_dict = {
-            'stl_input': self.get_argument('stl_input'),
-            'mp4_output': self.get_argument('mp4_output'),
             'iters': int(self.get_argument('iterations')),
             'resolution': int(self.get_argument('resolution')),
             'fps': int(self.get_argument('fps')),
             'method': self.get_argument('method'),
             'show_figs': False
         }
+        the_id = self.get_argument('uuid')
+        data_dict['stl_input'] = INPUT_DIR / f'{the_id}.stl'
+        data_dict['mp4_output'] = OUTPUT_DIR / f'{the_id}.mp4'
         
         # Enqueue that data for the worker to receive
         submit_queue = self.application.settings['submit_queue']
         logging.info(f'Enqueueing request: {data_dict}')
-        submit_queue.put(data_dict)
-        queued.append(data_dict['mp4_output'])
+        submit_queue.put((data_dict, the_id))
+        queued.append(the_id)
 
 
 class ResultsHandler(tornado.web.RequestHandler):
@@ -183,9 +198,10 @@ def main():
             (r'/started', StartedHandler), # POST to mark started job
             (r'/queued', QueuedHandler), # GET for list of queued
             (r'/running', RunningHandler), # GET for list of running
-            (r'/completed', CompletedHandler), # GET to download mp4
-            (r'/outputs/(.*)', DownloadStaticFileHandler,
+            (r'/completed', CompletedHandler), # POST to mark completed job
+            (r'/outputs/(.*)', DownloadStaticFileHandler, # GET to download mp4
                                {"path": OUTPUT_DIR}),
+            (r'/upload', UploadHandler),
             (r'/static/(.*)', tornado.web.StaticFileHandler,
                               {'path': SERVER_ROOT / 'static'}),
             (r'/(.*)', tornado.web.StaticFileHandler,
