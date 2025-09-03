@@ -133,6 +133,22 @@ class StartedHandler(tornado.web.RequestHandler):
             logging.error(f'Worker started unknown job {started}!')
 
 
+class QueuedHandler(tornado.web.RequestHandler):
+    def set_default_headers(self):
+        self.set_header("Content-Type", 'application/json')
+
+    def get(self):
+        self.write({'queued': queued})
+
+
+class RunningHandler(tornado.web.RequestHandler):
+    def set_default_headers(self):
+        self.set_header("Content-Type", 'application/json')
+
+    def get(self):
+        self.write({'running': running})
+
+
 class CompletedHandler(tornado.web.RequestHandler):
     def post(self):
         completed = self.get_argument('id')
@@ -162,10 +178,12 @@ def main():
     try:
         # Start web server on localhost
         app = tornado.web.Application([
-            (r'/submit', SubmitHandler),
-            (r'/results', ResultsHandler),
-            (r'/started', StartedHandler),
-            (r'/completed', CompletedHandler),
+            (r'/submit', SubmitHandler), # POST to submit new job
+            (r'/results', ResultsHandler), # GET for list of outputs
+            (r'/started', StartedHandler), # POST to mark started job
+            (r'/queued', QueuedHandler), # GET for list of queued
+            (r'/running', RunningHandler), # GET for list of running
+            (r'/completed', CompletedHandler), # GET to download mp4
             (r'/outputs/(.*)', DownloadStaticFileHandler,
                                {"path": OUTPUT_DIR}),
             (r'/static/(.*)', tornado.web.StaticFileHandler,
@@ -191,9 +209,6 @@ def main():
                 logging.error('Failed to terminate process!')
             else:
                 logging.info('Process successfully terminated')
-        q.close()
-            
-    logging.info('Main process completed')
 
 
 if __name__ == '__main__':

@@ -1,3 +1,5 @@
+let poll_interval = 2;
+
 let register_click = () => {
     $('#submit-button').on('click', () => {
         $.post('/submit',
@@ -28,15 +30,41 @@ let poll_outputs = () => {
     });
 }
 
-let register_outputs_poll = () => {
-    window.setInterval(poll_outputs, 5000);
+let poll_queued = () => {
+    $.get('/queued', (result) => {
+        $('#queued').empty();
+        $('#queued').append(`<p>Queued Jobs</p>`);
+        result.queued.forEach((item, index) => {
+            let content = `<div class="queued-item">${item}</div>`;
+            $('#queued').append(content);
+        });
+    });
 }
+
+let poll_running = () => {
+    $.get('/running', (result) => {
+        $('#running').empty();
+        $('#running').append(`<p>Running Jobs</p>`);
+        result.running.forEach((item, index) => {
+            let content = `<div class="running-item">${item}</div>`;
+            $('#running').append(content);
+        });
+    });
+}
+
+let register_outputs_poll = () => { window.setInterval(poll_outputs, poll_interval * 1000); }
+let register_queued_poll = () => { window.setInterval(poll_queued, poll_interval * 1000); }
+let register_running_poll = () => { window.setInterval(poll_running, poll_interval * 1000); }
 
 $('document').ready(() => {
     console.log('Document ready.');
     register_click();
     poll_outputs();
     register_outputs_poll();
+    poll_queued();
+    register_queued_poll();
+    poll_running();
+    register_running_poll();
 });
 
 console.log('Loaded js!')
