@@ -5,6 +5,7 @@ import logging
 import multiprocessing
 import os
 from pathlib import Path
+import pyvista
 import queue
 import requests
 import sys
@@ -23,6 +24,7 @@ QUEUE_SHUTDOWN_KEY = 'shutdown'
 SERVER_ROOT = Path(os.path.dirname(__file__))
 INPUT_DIR = SERVER_ROOT / 'inputs'
 OUTPUT_DIR = SERVER_ROOT / 'outputs'
+THUMB_DIR = SERVER_ROOT / 'thumbs'
 
 queued = list()
 running = list()
@@ -81,6 +83,16 @@ def worker_process(q: multiprocessing.Queue):
         sys.exit(0)
 
 
+def thumbnail_file(p: Path, the_id):
+    reader = pyvista.get_reader(p)
+    mesh = reader.read().rotate_x(90).rotate_z(90)
+    pl = pyvista.Plotter(off_screen=True)
+    pl.add_mesh(mesh)
+    thumb_path = THUMB_DIR / f'{the_id}.svg'
+    pl.save_graphic(thumb_path)
+    print(f'Saving thumbnail to {thumb_path}')
+
+
 class DownloadStaticFileHandler(tornado.web.StaticFileHandler):
     def set_extra_headers(self, path):
         # Force download for all files
@@ -103,6 +115,8 @@ class UploadHandler(tornado.web.RequestHandler):
         print(f'Saving it to {output_path}')
         with open(output_path, 'wb') as out:
             out.write(file_dict['body'])
+
+        thumbnail_file(output_path, the_id)
         self.write({'id': str(the_id)})
 
 
@@ -201,6 +215,8 @@ def main():
             (r'/completed', CompletedHandler), # POST to mark completed job
             (r'/outputs/(.*)', DownloadStaticFileHandler, # GET to download mp4
                                {"path": OUTPUT_DIR}),
+            (r'/thumbs/(.*)', tornado.web.StaticFileHandler, # GET for thumbnail
+                               {"path": THUMB_DIR}),
             (r'/upload', UploadHandler),
             (r'/static/(.*)', tornado.web.StaticFileHandler,
                               {'path': SERVER_ROOT / 'static'}),

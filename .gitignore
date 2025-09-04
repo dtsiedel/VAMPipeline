@@ -3,6 +3,7 @@ VAMtoolbox/
 *.mp4
 .DS_Store
 inputs/*.stl
+thumbs/*.svg
 outputs/*.txt
 outputs/*.mp4
 __pycache__

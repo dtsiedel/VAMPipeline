@@ -1,5 +1,9 @@
 let poll_interval = 2;
 
+let img_for_id = (id) => {
+    return `<img src="/thumbs/${id}.svg" width="50 height="50">`
+};
+
 let register_click = () => {
     $('#submit-button').on('click', () => {
         $.ajax({
@@ -32,7 +36,7 @@ let register_click = () => {
             }
         });
     });
-}
+};
 
 let poll_outputs = () => {
     $.get('/results', (result) => {
@@ -40,34 +44,39 @@ let poll_outputs = () => {
         $('#outputs').append(`<p>Output Files</p>`);
         result.files.forEach((item, index) => {
             let leaf = item.split('/').at(-1);
+            let img = img_for_id(leaf.split('.')[0])
             let link = `<a href="/outputs/${leaf}">Download</a>`;
-            let content = `<div class="output-item">${leaf} ${link}</div>`;
+            let content = `<div class="output-item">${img} ${leaf} ${link}</div>`;
             $('#outputs').append(content);
         });
     });
-}
+};
 
 let poll_queued = () => {
     $.get('/queued', (result) => {
         $('#queued').empty();
         $('#queued').append(`<p>Queued Jobs</p>`);
         result.queued.forEach((item, index) => {
-            let content = `<div class="queued-item">${item}</div>`;
+            let id = item.split('.')[0]
+            let img = img_for_id(id)
+            let content = `<div class="queued-item">${img} ${item}</div>`;
             $('#queued').append(content);
         });
     });
-}
+};
 
 let poll_running = () => {
     $.get('/running', (result) => {
         $('#running').empty();
         $('#running').append(`<p>Running Jobs</p>`);
         result.running.forEach((item, index) => {
-            let content = `<div class="running-item">${item}</div>`;
+            let id = item.split('.')[0]
+            let img = img_for_id(id)
+            let content = `<div class="running-item">${img} ${item}</div>`;
             $('#running').append(content);
         });
     });
-}
+};
 
 let register_outputs_poll = () => { window.setInterval(poll_outputs, poll_interval * 1000); }
 let register_queued_poll = () => { window.setInterval(poll_queued, poll_interval * 1000); }
