@@ -138,7 +138,12 @@ class SubmitHandler(tornado.web.RequestHandler):
         submit_queue = self.application.settings['submit_queue']
         logging.info(f'Enqueueing request: {data_dict}')
         submit_queue.put((data_dict, the_id))
-        queued.append(the_id)
+
+        # Include ID plus other fields in queued/running lists
+        new_dict = copy.deepcopy(data_dict)
+        new_dict['id'] = the_id
+        new_dict = {k: str(v) for k, v in new_dict.items()}
+        queued.append(new_dict)
 
 
 class ResultsHandler(tornado.web.RequestHandler):
@@ -154,12 +159,15 @@ class ResultsHandler(tornado.web.RequestHandler):
 class StartedHandler(tornado.web.RequestHandler):
     def post(self):
         started = self.get_argument('id')
-        try:
-            queued.remove(started)
-            running.append(started)
-            logging.info(f'Worker started job {started}.')
-        except ValueError:
-            logging.error(f'Worker started unknown job {started}!')
+        for i in queued:
+            # Match
+            if i['id'] == started:
+                queued.remove(i)
+                running.append(i)
+                logging.info(f'Worker started job {started}.')
+                return
+        # No match
+        logging.error(f'Worker started unknown job {started}!')
 
 
 class QueuedHandler(tornado.web.RequestHandler):
@@ -181,11 +189,11 @@ class RunningHandler(tornado.web.RequestHandler):
 class CompletedHandler(tornado.web.RequestHandler):
     def post(self):
         completed = self.get_argument('id')
-        if completed in running:
-            running.remove(completed)
-            logging.info(f'Worker completed job {completed}')
-        else:
-            logging.error(f'Worker completed unknown job {completed}!')
+        for i in running:
+            if i['id'] == completed:
+                running.remove(i)
+                logging.info(f'Worker completed job {completed}')
+        logging.error(f'Worker completed unknown job {completed}!')
 
 
 def main():

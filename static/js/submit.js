@@ -4,6 +4,11 @@ let img_for_id = (id) => {
     return `<img src="/thumbs/${id}.svg" width="50 height="50">`
 };
 
+let div_for_item = (img, item) => {
+    // Used for running/queued display
+    return `<div class="running-item">${img} ID: ${item.id} Iters: ${item.iters} Resolution: ${item.resolution} FPS: ${item.fps} Method: ${item.method}</div>`;
+};
+
 let register_click = () => {
     $('#submit-button').on('click', () => {
         let has_file = $('#file-input').get(0).files.length != 0;
@@ -61,9 +66,8 @@ let poll_queued = () => {
         $('#queued').empty();
         $('#queued').append(`<p>Queued Jobs</p>`);
         result.queued.forEach((item, index) => {
-            let id = item.split('.')[0]
-            let img = img_for_id(id)
-            let content = `<div class="queued-item">${img} ${item}</div>`;
+            let img = img_for_id(item.id);
+            let content = div_for_item(img, item);
             $('#queued').append(content);
         });
     });
@@ -74,9 +78,8 @@ let poll_running = () => {
         $('#running').empty();
         $('#running').append(`<p>Running Jobs</p>`);
         result.running.forEach((item, index) => {
-            let id = item.split('.')[0]
-            let img = img_for_id(id)
-            let content = `<div class="running-item">${img} ${item}</div>`;
+            let img = img_for_id(item.id);
+            let content = div_for_item(img, item);
             $('#running').append(content);
         });
     });
