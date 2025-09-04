@@ -45,8 +45,8 @@ let poll_outputs = () => {
         result.files.forEach((item, index) => {
             let leaf = item.split('/').at(-1);
             let img = img_for_id(leaf.split('.')[0])
-            let link = `<a href="/outputs/${leaf}">Download</a>`;
-            let content = `<div class="output-item">${img} ${leaf} ${link}</div>`;
+            let link = `<a href="/outputs/${leaf}">${leaf}</a>`;
+            let content = `<div class="output-item">${img} ${link}</div>`;
             $('#outputs').append(content);
         });
     });
