@@ -6,6 +6,10 @@ let img_for_id = (id) => {
 
 let register_click = () => {
     $('#submit-button').on('click', () => {
+        let has_file = $('#file-input').get(0).files.length != 0;
+        if (!has_file) {
+            return;
+        }
         $.ajax({
             url: '/upload',
             type: 'POST',
