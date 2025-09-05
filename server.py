@@ -193,6 +193,7 @@ class CompletedHandler(tornado.web.RequestHandler):
             if i['id'] == completed:
                 running.remove(i)
                 logging.info(f'Worker completed job {completed}')
+                return
         logging.error(f'Worker completed unknown job {completed}!')
 
 
