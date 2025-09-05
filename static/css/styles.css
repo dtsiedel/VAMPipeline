@@ -1,0 +1,123 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+#outputs, #running, #queued {
+    display: inline-block;
+    vertical-align: top;
+    margin: 5px;
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#submission, #outputs, #running, #queued {
+    width: 32%;
+}
+
+#submission {
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+#submission form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#submission select,
+#submission input[type="file"],
+#submission button {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#submission button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    padding: 10px;
+    transition: background-color 0.2s;
+}
+
+#submission button:hover {
+    background-color: #0056b3;
+}
+
+#outputs, #running, #queued {
+    height: 350px;
+    overflow-y: auto;
+}
+
+.output-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #fafafa;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.output-item:hover {
+    background-color: #f0f0f0;
+}
+
+.output-item img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    margin-right: 12px;
+}
+
+.output-item a {
+    text-decoration: none;
+    color: #337ab7;
+    font-size: 0.85em;
+}
+
+.output-item a:hover {
+    color: #23527c;
+}
+
+/* Running Items */
+.running-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #fafafa;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.running-item:hover {
+    background-color: #f0f0f0;
+}
+
+.running-item img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    margin-right: 12px;
+}
+
+@media (max-width: 768px) {
+    #submission, #outputs, #running, #queued {
+        width: 100%;
+        display: block;
+    }
+}

@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link rel="stylesheet" href="/static/css/styles.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="/static/js/submit.js"></script>
 </head>
 <body>
+<div id="queued"></div>
+<div id="running"></div>
+<div id="outputs"></div>
 <div id="submission">
-    <p>Choose Parameters</p>
+    <p>Submit Job</p>
     <form id="file-upload" enctype="multipart/form-data">
         <input name="file" type="file" id="file-input"/>
     </form>
@@ -34,8 +38,5 @@
     </select><br>
     <button id="submit-button">Submit</button>
 </div>
-<div id="outputs"></div>
-<div id="running"></div>
-<div id="queued"></div>
 </body>
 </html>
