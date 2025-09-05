@@ -6,7 +6,7 @@ let img_for_id = (id) => {
 
 let div_for_item = (img, item) => {
     // Used for running/queued display
-    return `<div class="running-item">${img} ID: ${item.id} Iters: ${item.iters} Resolution: ${item.resolution} FPS: ${item.fps} Method: ${item.method}</div>`;
+    return `<div class="running-item">${img} ID: ${item.id}<br> Iters: ${item.iters}<br> Resolution: ${item.resolution}<br> FPS: ${item.fps}<br> Method: ${item.method}</div>`;
 };
 
 let register_click = () => {

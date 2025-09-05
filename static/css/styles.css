@@ -81,6 +81,7 @@ body {
     height: 50px;
     object-fit: cover;
     margin-right: 12px;
+    font-size: 0.85em;
 }
 
 .output-item a {
@@ -102,6 +103,7 @@ body {
     background-color: #fafafa;
     border-radius: 4px;
     transition: background-color 0.2s;
+    font-size: 0.85em;
 }
 
 .running-item:hover {
