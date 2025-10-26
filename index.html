@@ -6,37 +6,43 @@
     <script src="/static/js/submit.js"></script>
 </head>
 <body>
-<div id="queued"></div>
-<div id="running"></div>
-<div id="outputs"></div>
-<div id="submission">
-    <p>Submit Job</p>
-    <form id="file-upload" enctype="multipart/form-data">
-        <input name="file" type="file" id="file-input"/>
-    </form>
-    <label for="method">Method:</label><br>
-    <select id="method" name="method">
-        <option value="OSMO">OSMO</option>
-        <option value="CAL">CAL</option>
-    </select><br>
-    <label for="fps">FPS:</label><br>
-    <select id="fps" name="fps">
-        <option value="30">30</option>
-        <option value="60">60</option>
-    </select><br>
-    <label for="resolution">Resolution:</label><br>
-    <select id="resolution" name="resolution">
-        <option value="50">50</option>
-        <option value="100">100</option>
-        <option value="200">200</option>
-    </select><br>
-    <label for="iterations">Iterations:</label><br>
-    <select id="iterations" name="iterations">
-        <option value="5">5</option>
-        <option value="10">10</option>
-        <option value="20">20</option>
-    </select><br>
-    <button id="submit-button">Submit</button>
+<div class="container">
+    <div class="top-section">
+        <div id="queued"></div>
+        <div id="running"></div>
+    </div>
+    <div id="outputs"></div>
+    <div class="bottom-section">
+        <div id="submission">
+            <p>Submit Job</p>
+            <form id="file-upload" enctype="multipart/form-data">
+                <input name="file" type="file" id="file-input"/>
+            </form>
+            <label for="method">Method:</label><br>
+            <select id="method" name="method">
+                <option value="OSMO">OSMO</option>
+                <option value="CAL">CAL</option>
+            </select><br>
+            <label for="fps">FPS:</label><br>
+            <select id="fps" name="fps">
+                <option value="30">30</option>
+                <option value="60">60</option>
+            </select><br>
+            <label for="resolution">Resolution:</label><br>
+            <select id="resolution" name="resolution">
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="200">200</option>
+            </select><br>
+            <label for="iterations">Iterations:</label><br>
+            <select id="iterations" name="iterations">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+            </select><br>
+            <button id="submit-button">Submit</button>
+        </div>
+    </div>
 </div>
 </body>
 </html>
