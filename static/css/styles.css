@@ -4,18 +4,24 @@
     box-sizing: border-box;
 }
 
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
 body {
     font-family: system-ui, -apple-system, sans-serif;
     line-height: 1.6;
-    padding: 20px;
-    background-color: #f5f5f5;
+    padding: 16px;
+    background-color: #1a1a1a;
+    color: #ffffff;
 }
 
 .container {
     display: flex;
     flex-direction: column;
     height: 100vh;
-    gap: 20px;
+    gap: 25px;
 }
 
 .top-section {
@@ -25,10 +31,10 @@ body {
 
 #queued, #running {
     flex: 1;
-    background: white;
+    background: #2d2d2d;
     border-radius: 8px;
     padding: 16px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     overflow-y: auto;
     height: calc(50vh - 60px);
 }
@@ -42,7 +48,6 @@ body {
     margin-right: 5px;
 }
 
-/* Bottom section - Submission and Outputs */
 .bottom-section {
     display: flex;
     width: 66%;
@@ -51,10 +56,10 @@ body {
 #submission {
     flex: 2;
     margin-right: 5px;
-    background: white;
+    background: #2d2d2d;
     border-radius: 8px;
     padding: 16px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 #submission form {
@@ -67,13 +72,14 @@ body {
 #submission input[type="file"],
 #submission button {
     padding: 8px;
-    border: 1px solid #ddd;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 4px;
+    background-color: #333;
+    color: white;
 }
 
 #submission button {
-    background-color: #007bff;
-    color: white;
+    background-color: #0056b3;
     border: none;
     cursor: pointer;
     padding: 10px;
@@ -81,7 +87,7 @@ body {
 }
 
 #submission button:hover {
-    background-color: #0056b3;
+    background-color: #004080;
 }
 
 .output-item {
@@ -89,13 +95,15 @@ body {
     align-items: center;
     padding: 8px;
     margin-bottom: 10px;
-    background-color: #fafafa;
+    background-color: #333;
     border-radius: 4px;
     transition: background-color 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
 }
 
 .output-item:hover {
-    background-color: #f0f0f0;
+    background-color: #444;
 }
 
 .output-item img {
@@ -111,14 +119,14 @@ body {
     align-items: center;
     padding: 10px;
     margin-bottom: 10px;
-    background-color: #fafafa;
+    background-color: #333;
     border-radius: 4px;
     transition: background-color 0.2s;
     font-size: 0.85em;
 }
 
 .running-item:hover {
-    background-color: #f0f0f0;
+    background-color: #444;
 }
 
 .running-item img {
@@ -130,14 +138,14 @@ body {
 
 #outputs {
     position: absolute;
-    right: 10px;
-    top: 20px;
-    width: calc(33.33% - 5px);
-    height: calc(100vh - 40px);
-    background: white;
+    right: 16px;
+    top: 18px;
+    width: calc(33.33%);
+    height: calc(100vh - 54px);
+    background: #2d2d2d;
     border-radius: 8px;
     padding: 16px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     overflow-y: auto;
 }
 
